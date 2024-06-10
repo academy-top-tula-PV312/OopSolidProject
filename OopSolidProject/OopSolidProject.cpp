@@ -3,214 +3,132 @@
 #include <string>
 #include <exception>
 #include <fstream>
+#include <algorithm>
 
-// SOLID
+//Predconditions:
+// 
+//void funcPred(int value)
+//{
+//    if (value < 0)
+//        throw new std::exception();
+//
+//    std::cout << value;
+//}
 
-class Phone
+// Postconditions
+//
+//int funcPost(std::vector<int> numbers)
+//{
+//    if (numbers.size() == 0)
+//        throw new std::exception("size of vector is zero");
+//
+//    int sum = 0;
+//    std::for_each(std::begin(numbers),
+//                std::end(numbers),
+//                [](auto item) {
+//                    sum += item;
+//                });
+//
+//    if (sum < 0)
+//        throw new std::exception("result is negative");
+//
+//    return sum;
+//}
+
+
+class Account
 {
-    std::string model;
-    int price;
+protected:
+    int amount;
 public:
-    std::string& Model() { return model; }
-    int& Price() { return price; }
-
-    Phone(std::string model, int price)
-        : model{ model }, price{ price } {}
-};
-
-//Bad
-/*
-class PhonesStore
-{
-    std::vector<Phone> phones;
-public:
-    void Process()
+    int Amount() { return amount; }
+    virtual void SetAmount(int amount)
     {
-        std::string model;
-        std::string price;
-
-        // input data
-        std::cout << "Input model: ";
-        std::cin >> model;
-        std::cout << "Input price: ";
-        std::cin >> price;
-
-        // validate
-        int priceInt;
-        try
-        {
-            priceInt = std::stoi(price);
-        }
-        catch (...)
-        {
-            throw new std::exception("Error with format price");
-        }
-
-        // create object
-        Phone phone(model, priceInt);
-
-        // save to file
-        std::ofstream file;
-        file.open("phones.txt", std::ios::app);
-        file << phone.Model() << " " << phone.Price() << "\n";
-        file.close();
+        if (amount < 0)
+            throw new std::exception("amount negative!");
+        this->amount = amount;
     }
 
-};
-*/
-
-class IPhoneReader
-{
-public:
-    virtual std::vector<std::string> GetInputData() = 0;
-};
-
-class IPhoneCreater
-{
-public:
-    virtual Phone* CreatePhone(std::vector<std::string> data) = 0;
-};
-
-class IPhoneValidator
-{
-public:
-    virtual bool IsValid(Phone phone) = 0;
-};
-
-class IPhoneSaver
-{
-public:
-    virtual void Save(Phone phone) = 0;
-};
-
-class PhonesStore
-{
-    std::vector<Phone> phones;
-    
-    IPhoneReader* reader;
-    IPhoneValidator* validator;
-    IPhoneCreater* creator;
-    IPhoneSaver* saver;
-public:
-    PhonesStore(IPhoneReader* reader,
-                IPhoneValidator* validator,
-                IPhoneCreater* creator,
-                IPhoneSaver* saver)
-        : reader{ reader },
-        validator{ validator },
-        creator{ creator },
-        saver{ saver } {};
-
-    void Process()
+    virtual int GetInterest(int month, int rate)
     {
-        std::vector<std::string> data = reader->GetInputData();
+        if (month < 1 || month > 12 || rate < 0)
+            throw new std::exception("incorrect input date");
 
-        Phone* phone;
-        try
-        {
-            phone = creator->CreatePhone(data);
-        }
-        catch (std::exception ex)
-        {
-            std::cout << ex.what() << "\n";
-            return;
-        }
+        int sum = this->amount;
+        for (int i{}; i < month; i++)
+            sum += sum * rate / 100;
 
-        if (validator->IsValid(*phone))
-        {
-            phones.push_back(*phone);
-            saver->Save(*phone);
-        }
-        else
-        {
-            std::cout << "Incorrect phones info\n";
-        }
-        
+        if (this->amount >= 10000)
+            sum += 1000;
+
+        this->amount = sum;
+
+        return sum;
     }
 };
 
-
-// Implemetations
-class ConsolePhoneReader : public IPhoneReader
+class MicroAccount : public Account
 {
 public:
-    std::vector<std::string> GetInputData() override
+    void SetAmount(int amount) override
     {
-        std::string model;
-        std::string price;
+        if (amount < 0)
+            throw new std::exception("amount negative!");
+        /*if (amount > 1000)
+            throw new std::exception("amount more than 1000!");*/
+        this->amount = amount;
+    }
 
-        // input data
-        std::cout << "Input model: ";
-        std::cin >> model;
-        std::cout << "Input price: ";
-        std::cin >> price;
+    int GetInterest(int month, int rate) override
+    {
+        if (month < 1 || month > 12 || rate < 0)
+            throw new std::exception("incorrect input date");
 
-        return std::vector<std::string>{ model, price };
+        int sum = this->amount;
+        for (int i{}; i < month; i++)
+            sum += sum * rate / 100;
+
+        this->amount = sum;
+
+        return sum;
     }
 };
 
-class GeneralPhoneCreater : public IPhoneCreater
+void InitAmount(Account* account)
 {
-public:
-    Phone* CreatePhone(std::vector<std::string> data) override
+    try
     {
-        std::string price = data[1];
-
-        int priceInt;
-        try
-        {
-            priceInt = std::stoi(price);
-        }
-        catch (...)
-        {
-            throw new std::exception("Error with format price");
-        }
-
-        // create object
-        return new Phone(data[0], priceInt);
+        account->SetAmount(15000);
     }
+    catch (std::exception* ex)
+    {
+        throw ex;
+    }
+}
 
-    
-};
-
-class GeneralPhoneValidator : public IPhoneValidator
+void CalculateInterest(Account* account, int testResult)
 {
-public:
-    bool IsValid(Phone phone) override
-    {
-        return phone.Model() != "" && phone.Price() > 0;
-    }
-};
-
-class FilePhoneSaver : public IPhoneSaver
-{
-    std::string fileName;
-public:
-    FilePhoneSaver(std::string fileName) : fileName{ fileName } {}
-
-    void Save(Phone phone) override
-    {
-        std::ofstream file;
-        file.open(fileName, std::ios::app);
-        file << phone.Model() << " " << phone.Price() << "\n";
-        file.close();
-    }
-};
-
+    int sum = account->GetInterest(1, 10);
+    if (sum != testResult)
+        std::cout << "Error! " << sum << " != " << testResult << "\n";
+    else
+        std::cout << "Ok\n";
+}
 
 int main()
 {
-    // S - Single Responsibility Principle
-    // Принцип Единственной отвественности
-
-    PhonesStore store(new ConsolePhoneReader(),
-        new GeneralPhoneValidator(),
-        new GeneralPhoneCreater(),
-        new FilePhoneSaver("phones.txt"));
-
-    for (int i{}; i < 2; i++)
-        store.Process();
-
+    try
+    {
+        Account* account = new MicroAccount();
+        InitAmount(account);
+        //std::cout << account->GetInterest(1, 10);
+        CalculateInterest(account, 17500);
+    }
+    catch (std::exception* ex)
+    {
+        std::cerr << ex->what() << "\n";
+    }
+    
 }
  
 

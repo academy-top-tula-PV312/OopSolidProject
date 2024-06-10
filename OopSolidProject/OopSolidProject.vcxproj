@@ -127,7 +127,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ExampleLOne.cpp" />
+    <ClCompile Include="ExampleO.cpp" />
     <ClCompile Include="ExampleSOne.cpp" />
+    <ClCompile Include="ExampleSTwo.cpp" />
     <ClCompile Include="OopSolidProject.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
