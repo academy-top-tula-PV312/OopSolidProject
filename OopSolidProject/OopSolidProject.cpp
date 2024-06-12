@@ -5,130 +5,53 @@
 #include <fstream>
 #include <algorithm>
 
-//Predconditions:
-// 
-//void funcPred(int value)
-//{
-//    if (value < 0)
-//        throw new std::exception();
-//
-//    std::cout << value;
-//}
-
-// Postconditions
-//
-//int funcPost(std::vector<int> numbers)
-//{
-//    if (numbers.size() == 0)
-//        throw new std::exception("size of vector is zero");
-//
-//    int sum = 0;
-//    std::for_each(std::begin(numbers),
-//                std::end(numbers),
-//                [](auto item) {
-//                    sum += item;
-//                });
-//
-//    if (sum < 0)
-//        throw new std::exception("result is negative");
-//
-//    return sum;
-//}
-
-
-class Account
+class IPrinter
 {
-protected:
-    int amount;
 public:
-    int Amount() { return amount; }
-    virtual void SetAmount(int amount)
+    virtual void Print(std::string message) = 0;
+};
+
+class Employee
+{
+    std::string name;
+    int age;
+    IPrinter* printer = nullptr;
+public:
+    std::string& Name() { return name; }
+    int& Age() { return age; }
+    IPrinter*& Printer() { return printer; }
+
+    void Info()
     {
-        if (amount < 0)
-            throw new std::exception("amount negative!");
-        this->amount = amount;
+        if (printer)
+            printer->Print(this->ToString());
     }
 
-    virtual int GetInterest(int month, int rate)
+    std::string ToString() 
     {
-        if (month < 1 || month > 12 || rate < 0)
-            throw new std::exception("incorrect input date");
-
-        int sum = this->amount;
-        for (int i{}; i < month; i++)
-            sum += sum * rate / 100;
-
-        if (this->amount >= 10000)
-            sum += 1000;
-
-        this->amount = sum;
-
-        return sum;
+        return "Name: " + name + ", Age: " + std::to_string(age);
     }
 };
 
-class MicroAccount : public Account
+
+class ConsolePrinter : public IPrinter
 {
 public:
-    void SetAmount(int amount) override
+    void Print(std::string message) override
     {
-        if (amount < 0)
-            throw new std::exception("amount negative!");
-        /*if (amount > 1000)
-            throw new std::exception("amount more than 1000!");*/
-        this->amount = amount;
-    }
-
-    int GetInterest(int month, int rate) override
-    {
-        if (month < 1 || month > 12 || rate < 0)
-            throw new std::exception("incorrect input date");
-
-        int sum = this->amount;
-        for (int i{}; i < month; i++)
-            sum += sum * rate / 100;
-
-        this->amount = sum;
-
-        return sum;
+        std::cout << message << "\n";
     }
 };
-
-void InitAmount(Account* account)
-{
-    try
-    {
-        account->SetAmount(15000);
-    }
-    catch (std::exception* ex)
-    {
-        throw ex;
-    }
-}
-
-void CalculateInterest(Account* account, int testResult)
-{
-    int sum = account->GetInterest(1, 10);
-    if (sum != testResult)
-        std::cout << "Error! " << sum << " != " << testResult << "\n";
-    else
-        std::cout << "Ok\n";
-}
 
 int main()
 {
-    try
-    {
-        Account* account = new MicroAccount();
-        InitAmount(account);
-        //std::cout << account->GetInterest(1, 10);
-        CalculateInterest(account, 17500);
-    }
-    catch (std::exception* ex)
-    {
-        std::cerr << ex->what() << "\n";
-    }
-    
+    Employee* bob = new Employee();
+    bob->Name() = "Bobby";
+    bob->Age() = 29;
+    bob->Printer() = new ConsolePrinter();
+    bob->Info();
+
+    //std::cout << bob->ToString() << "\n";
 }
  
 
